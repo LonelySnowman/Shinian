@@ -37,6 +37,7 @@ import {
   StartAnniversaryLiveActivityUseCase,
   UpdateAnniversaryLiveActivityUseCase,
 } from '@/src/features/live-activity';
+import { CompleteOnboardingUseCase } from '@/src/features/onboarding';
 import { RefreshWidgetsUseCase, WidgetSyncService } from '@/src/features/widget';
 import { createCalendarPort } from '@/src/native/calendar/createCalendarPort';
 import { createLiveActivityPort } from '@/src/native/live-activity/createLiveActivityPort';
@@ -81,6 +82,7 @@ export interface AppContainer {
   updateLiveActivity: UpdateAnniversaryLiveActivityUseCase;
   endLiveActivity: EndAnniversaryLiveActivityUseCase;
   liveActivitySyncService: LiveActivitySyncService;
+  completeOnboarding: CompleteOnboardingUseCase;
 }
 
 let containerSingleton: AppContainer | null = null;
@@ -174,6 +176,7 @@ export function createAppContainer(): AppContainer {
     updateLiveActivity,
     endLiveActivity,
   );
+  const completeOnboarding = new CompleteOnboardingUseCase(preferencesRepository);
 
   containerSingleton = {
     eventBus,
@@ -206,6 +209,7 @@ export function createAppContainer(): AppContainer {
     updateLiveActivity,
     endLiveActivity,
     liveActivitySyncService,
+    completeOnboarding,
   };
 
   return containerSingleton;
