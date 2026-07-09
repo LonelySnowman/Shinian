@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@expo/ui": "^57.0.4",
     "@expo/vector-icons": "^15.1.1",
     "@hookform/resolvers": "^5.4.0",
     "@react-native-community/datetimepicker": "^9.1.0",
@@ -19,6 +20,7 @@
     "expo-status-bar": "~57.0.0",
     "expo-symbols": "~57.0.0",
     "expo-web-browser": "~57.0.0",
+    "expo-widgets": "^57.0.3",
     "lunar-javascript": "^1.7.7",
     "nativewind": "^4.2.6",
     "react": "19.2.3",
@@ -40,6 +42,7 @@
   "devDependencies": {
     "@types/react": "~19.2.2",
     "@types/uuid": "^10.0.0",
+    "playwright": "^1.61.1",
     "typescript": "~6.0.3"
   },
   "scripts": {

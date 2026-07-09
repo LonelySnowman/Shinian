@@ -7,6 +7,7 @@ import {
   useCalendarSyncPreference,
 } from '@/src/features/calendar-sync';
 import { useNotificationPermission } from '@/src/features/notification';
+import { useAppContainer } from '@/src/infrastructure/di/AppContainer';
 import { Button } from '@/src/shared/ui/Button';
 import { Card } from '@/src/shared/ui/Card';
 
@@ -22,6 +23,7 @@ function permissionLabel(status: string): string {
 }
 
 export default function SettingsScreen() {
+  const container = useAppContainer();
   const { status, loading, request } = useNotificationPermission();
   const {
     status: calendarStatus,
@@ -81,6 +83,15 @@ export default function SettingsScreen() {
               App 为数据源；若你在系统日历中删除了事件，下次启动会自动修复。
             </Text>
           )}
+        </Card>
+
+        <Card title="桌面小组件" subtitle="iOS 主屏幕 Widget（需 Development Build）">
+          <Text className="mt-3 text-sm leading-6 text-slate-500">
+            在 iOS 设备上添加「时念」小组件，可查看 Small / Medium / Large 三种尺寸的倒计时。纪念日变更后会自动刷新。
+          </Text>
+          <View className="mt-4">
+            <Button label="刷新小组件数据" onPress={() => container.refreshWidgets.execute()} />
+          </View>
         </Card>
 
         <Card title="数据与同步" subtitle="V1 完全离线，所有数据存储在本地">

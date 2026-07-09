@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.sena.mobile"
+      "bundleIdentifier": "app.sena.mobile",
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.app.sena.mobile"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -42,6 +45,21 @@
         {
           "calendarPermission": "时念需要访问你的日历来同步纪念日。",
           "remindersPermission": "时念需要访问你的提醒事项来同步纪念日。"
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "groupIdentifier": "group.app.sena.mobile",
+          "bundleIdentifier": "app.sena.mobile.widgets",
+          "widgets": [
+            {
+              "name": "SenaWidget",
+              "displayName": "时念",
+              "description": "在桌面查看即将到来的纪念日倒计时",
+              "supportedFamilies": ["systemSmall", "systemMedium", "systemLarge"]
+            }
+          ]
         }
       ],
       [

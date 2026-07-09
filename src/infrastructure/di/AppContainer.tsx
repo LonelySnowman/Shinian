@@ -6,6 +6,7 @@ import type { CalendarPort } from '@/src/core/domain/ports/CalendarPort';
 import type { CategoryRepository } from '@/src/core/domain/ports/CategoryRepository';
 import type { NotificationPort } from '@/src/core/domain/ports/NotificationPort';
 import type { PreferencesRepository } from '@/src/core/domain/ports/PreferencesRepository';
+import type { WidgetPort } from '@/src/core/domain/ports/WidgetPort';
 import {
   ArchiveAnniversaryUseCase,
   CreateAnniversaryUseCase,
@@ -28,14 +29,17 @@ import {
   RescheduleAllRemindersUseCase,
   ScheduleRemindersForAnniversaryUseCase,
 } from '@/src/features/notification';
+import { RefreshWidgetsUseCase, WidgetSyncService } from '@/src/features/widget';
 import { createCalendarPort } from '@/src/native/calendar/createCalendarPort';
 import { createNotificationPort } from '@/src/native/notifications/createNotificationPort';
+import { createWidgetPort } from '@/src/native/widgets/createWidgetPort';
 import { LoadingScreen } from '@/src/shared/ui/LoadingScreen';
 import { initialMigration } from '@/src/storage/migrations/001_initial';
 import { runMigrations } from '@/src/storage/migrations/runner';
 import { MmkvAnniversaryRepository } from '@/src/storage/repositories/MmkvAnniversaryRepository';
 import { MmkvCategoryRepository } from '@/src/storage/repositories/MmkvCategoryRepository';
 import { MmkvPreferencesRepository } from '@/src/storage/repositories/MmkvPreferencesRepository';
+import { MmkvWidgetCacheRepository } from '@/src/storage/repositories/MmkvWidgetCacheRepository';
 
 export interface AppContainer {
   eventBus: EventBus;
@@ -44,6 +48,7 @@ export interface AppContainer {
   preferencesRepository: PreferencesRepository;
   notificationPort: NotificationPort;
   calendarPort: CalendarPort;
+  widgetPort: WidgetPort;
   createAnniversary: CreateAnniversaryUseCase;
   updateAnniversary: UpdateAnniversaryUseCase;
   deleteAnniversary: DeleteAnniversaryUseCase;
@@ -60,6 +65,8 @@ export interface AppContainer {
   reconcileCalendarEvents: ReconcileCalendarEventsUseCase;
   updateCalendarSyncPreference: UpdateCalendarSyncPreferenceUseCase;
   calendarSyncService: CalendarSyncService;
+  refreshWidgets: RefreshWidgetsUseCase;
+  widgetSyncService: WidgetSyncService;
 }
 
 let containerSingleton: AppContainer | null = null;
@@ -73,8 +80,10 @@ export function createAppContainer(): AppContainer {
   const anniversaryRepository = new MmkvAnniversaryRepository();
   const categoryRepository = new MmkvCategoryRepository();
   const preferencesRepository = new MmkvPreferencesRepository();
+  const widgetCacheRepository = new MmkvWidgetCacheRepository();
   const notificationPort = createNotificationPort();
   const calendarPort = createCalendarPort();
+  const widgetPort = createWidgetPort();
 
   const scheduleReminders = new ScheduleRemindersForAnniversaryUseCase(
     anniversaryRepository,
@@ -124,6 +133,13 @@ export function createAppContainer(): AppContainer {
     unsyncAnniversaryFromCalendar,
   );
 
+  const refreshWidgets = new RefreshWidgetsUseCase(
+    anniversaryRepository,
+    widgetCacheRepository,
+    widgetPort,
+  );
+  const widgetSyncService = new WidgetSyncService(eventBus, refreshWidgets);
+
   containerSingleton = {
     eventBus,
     anniversaryRepository,
@@ -131,6 +147,7 @@ export function createAppContainer(): AppContainer {
     preferencesRepository,
     notificationPort,
     calendarPort,
+    widgetPort,
     createAnniversary: new CreateAnniversaryUseCase(anniversaryRepository, eventBus),
     updateAnniversary: new UpdateAnniversaryUseCase(anniversaryRepository, eventBus),
     deleteAnniversary: new DeleteAnniversaryUseCase(anniversaryRepository, eventBus),
@@ -147,6 +164,8 @@ export function createAppContainer(): AppContainer {
     reconcileCalendarEvents,
     updateCalendarSyncPreference,
     calendarSyncService,
+    refreshWidgets,
+    widgetSyncService,
   };
 
   return containerSingleton;
@@ -170,9 +189,11 @@ export function AppContainerProvider({
       .then(() => container.categoryRepository.seedDefaults(new Date().toISOString()))
       .then(() => container.rescheduleAllReminders.execute())
       .then(() => container.reconcileCalendarEvents.execute())
+      .then(() => container.refreshWidgets.execute())
       .then(() => {
         container.notificationSyncService.start();
         container.calendarSyncService.start();
+        container.widgetSyncService.start();
         if (mounted) {
           setReady(true);
         }
@@ -182,6 +203,7 @@ export function AppContainerProvider({
       mounted = false;
       container.notificationSyncService.stop();
       container.calendarSyncService.stop();
+      container.widgetSyncService.stop();
     };
   }, [container]);
 
