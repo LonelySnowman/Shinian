@@ -52,6 +52,7 @@
         {
           "groupIdentifier": "group.app.sena.mobile",
           "bundleIdentifier": "app.sena.mobile.widgets",
+          "frequentUpdates": true,
           "widgets": [
             {
               "name": "SenaWidget",

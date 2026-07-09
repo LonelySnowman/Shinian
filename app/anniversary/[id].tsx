@@ -11,6 +11,7 @@ import {
   formatCountdownUnit,
 } from '@/src/features/countdown';
 import { useCategories } from '@/src/features/category';
+import { useLiveActivityControls } from '@/src/features/live-activity';
 import { useAppContainer } from '@/src/infrastructure/di/AppContainer';
 import { Button } from '@/src/shared/ui/Button';
 import { Card } from '@/src/shared/ui/Card';
@@ -20,6 +21,7 @@ export default function AnniversaryDetailScreen() {
   const { item, loading } = useAnniversary(id);
   const { items: categories } = useCategories();
   const container = useAppContainer();
+  const liveActivity = useLiveActivityControls(id);
 
   if (loading || !item) {
     return (
@@ -115,6 +117,36 @@ export default function AnniversaryDetailScreen() {
             : '未开启日历同步'}
         </Text>
       </Card>
+
+      {liveActivity.supported ? (
+        <Card title="Live Activity" subtitle="灵动岛 / 锁屏实时倒计时（需 Development Build）">
+          <Text className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            {liveActivity.loading
+              ? '检查中...'
+              : liveActivity.isActiveForCurrent
+                ? '当前纪念日正在 Live Activity 中显示'
+                : liveActivity.activeAnniversaryId
+                  ? '已有其他纪念日正在 Live Activity 中显示，开启后将替换'
+                  : '未开启 Live Activity'}
+          </Text>
+          <View className="mt-4 gap-3">
+            {liveActivity.isActiveForCurrent ? (
+              <Button
+                label="结束 Live Activity"
+                variant="secondary"
+                disabled={liveActivity.busy}
+                onPress={() => liveActivity.end()}
+              />
+            ) : (
+              <Button
+                label="开启 Live Activity"
+                disabled={liveActivity.busy}
+                onPress={() => liveActivity.start()}
+              />
+            )}
+          </View>
+        </Card>
+      ) : null}
 
       <View className="gap-3">
         <Button label="编辑" onPress={() => router.push(`/anniversary/edit/${item.id}`)} />

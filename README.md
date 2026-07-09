@@ -24,7 +24,8 @@ AI-ready 纪念日与生活事件助手。V1 为完全离线应用，无后端�
 - [x] 本地通知（ReminderPlanner + Expo Notifications）
 - [x] 日历同步（expo-calendar + EventKit / CalendarProvider）
 - [x] Widget（iOS expo-widgets + WidgetSnapshot）
-- [ ] Live Activity
+- [x] Live Activity（iOS 灵动岛 / 锁屏实时倒计时）
+- [ ] Onboarding + 权限引导
 
 ## 开发
 

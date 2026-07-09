@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { AppState } from 'react-native';
 
 import { EventBus } from '@/src/core/application/bus/EventBus';
 import type { AnniversaryRepository } from '@/src/core/domain/ports/AnniversaryRepository';
@@ -6,6 +7,7 @@ import type { CalendarPort } from '@/src/core/domain/ports/CalendarPort';
 import type { CategoryRepository } from '@/src/core/domain/ports/CategoryRepository';
 import type { NotificationPort } from '@/src/core/domain/ports/NotificationPort';
 import type { PreferencesRepository } from '@/src/core/domain/ports/PreferencesRepository';
+import type { LiveActivityPort } from '@/src/core/domain/ports/LiveActivityPort';
 import type { WidgetPort } from '@/src/core/domain/ports/WidgetPort';
 import {
   ArchiveAnniversaryUseCase,
@@ -29,8 +31,15 @@ import {
   RescheduleAllRemindersUseCase,
   ScheduleRemindersForAnniversaryUseCase,
 } from '@/src/features/notification';
+import {
+  EndAnniversaryLiveActivityUseCase,
+  LiveActivitySyncService,
+  StartAnniversaryLiveActivityUseCase,
+  UpdateAnniversaryLiveActivityUseCase,
+} from '@/src/features/live-activity';
 import { RefreshWidgetsUseCase, WidgetSyncService } from '@/src/features/widget';
 import { createCalendarPort } from '@/src/native/calendar/createCalendarPort';
+import { createLiveActivityPort } from '@/src/native/live-activity/createLiveActivityPort';
 import { createNotificationPort } from '@/src/native/notifications/createNotificationPort';
 import { createWidgetPort } from '@/src/native/widgets/createWidgetPort';
 import { LoadingScreen } from '@/src/shared/ui/LoadingScreen';
@@ -49,6 +58,7 @@ export interface AppContainer {
   notificationPort: NotificationPort;
   calendarPort: CalendarPort;
   widgetPort: WidgetPort;
+  liveActivityPort: LiveActivityPort;
   createAnniversary: CreateAnniversaryUseCase;
   updateAnniversary: UpdateAnniversaryUseCase;
   deleteAnniversary: DeleteAnniversaryUseCase;
@@ -67,6 +77,10 @@ export interface AppContainer {
   calendarSyncService: CalendarSyncService;
   refreshWidgets: RefreshWidgetsUseCase;
   widgetSyncService: WidgetSyncService;
+  startLiveActivity: StartAnniversaryLiveActivityUseCase;
+  updateLiveActivity: UpdateAnniversaryLiveActivityUseCase;
+  endLiveActivity: EndAnniversaryLiveActivityUseCase;
+  liveActivitySyncService: LiveActivitySyncService;
 }
 
 let containerSingleton: AppContainer | null = null;
@@ -84,6 +98,7 @@ export function createAppContainer(): AppContainer {
   const notificationPort = createNotificationPort();
   const calendarPort = createCalendarPort();
   const widgetPort = createWidgetPort();
+  const liveActivityPort = createLiveActivityPort();
 
   const scheduleReminders = new ScheduleRemindersForAnniversaryUseCase(
     anniversaryRepository,
@@ -140,6 +155,26 @@ export function createAppContainer(): AppContainer {
   );
   const widgetSyncService = new WidgetSyncService(eventBus, refreshWidgets);
 
+  const startLiveActivity = new StartAnniversaryLiveActivityUseCase(
+    anniversaryRepository,
+    liveActivityPort,
+    preferencesRepository,
+  );
+  const updateLiveActivity = new UpdateAnniversaryLiveActivityUseCase(
+    anniversaryRepository,
+    liveActivityPort,
+    preferencesRepository,
+  );
+  const endLiveActivity = new EndAnniversaryLiveActivityUseCase(
+    liveActivityPort,
+    preferencesRepository,
+  );
+  const liveActivitySyncService = new LiveActivitySyncService(
+    eventBus,
+    updateLiveActivity,
+    endLiveActivity,
+  );
+
   containerSingleton = {
     eventBus,
     anniversaryRepository,
@@ -148,6 +183,7 @@ export function createAppContainer(): AppContainer {
     notificationPort,
     calendarPort,
     widgetPort,
+    liveActivityPort,
     createAnniversary: new CreateAnniversaryUseCase(anniversaryRepository, eventBus),
     updateAnniversary: new UpdateAnniversaryUseCase(anniversaryRepository, eventBus),
     deleteAnniversary: new DeleteAnniversaryUseCase(anniversaryRepository, eventBus),
@@ -166,6 +202,10 @@ export function createAppContainer(): AppContainer {
     calendarSyncService,
     refreshWidgets,
     widgetSyncService,
+    startLiveActivity,
+    updateLiveActivity,
+    endLiveActivity,
+    liveActivitySyncService,
   };
 
   return containerSingleton;
@@ -190,10 +230,12 @@ export function AppContainerProvider({
       .then(() => container.rescheduleAllReminders.execute())
       .then(() => container.reconcileCalendarEvents.execute())
       .then(() => container.refreshWidgets.execute())
+      .then(() => container.updateLiveActivity.executeActive())
       .then(() => {
         container.notificationSyncService.start();
         container.calendarSyncService.start();
         container.widgetSyncService.start();
+        container.liveActivitySyncService.start();
         if (mounted) {
           setReady(true);
         }
@@ -204,7 +246,18 @@ export function AppContainerProvider({
       container.notificationSyncService.stop();
       container.calendarSyncService.stop();
       container.widgetSyncService.stop();
+      container.liveActivitySyncService.stop();
     };
+  }, [container]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        void container.updateLiveActivity.executeActive();
+      }
+    });
+
+    return () => subscription.remove();
   }, [container]);
 
   const value = useMemo(() => container, [container]);

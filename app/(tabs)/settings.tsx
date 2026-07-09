@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { Switch, Text, View } from 'react-native';
+import { Platform, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -7,6 +7,7 @@ import {
   useCalendarSyncPreference,
 } from '@/src/features/calendar-sync';
 import { useNotificationPermission } from '@/src/features/notification';
+import { useLiveActivityControls } from '@/src/features/live-activity';
 import { useAppContainer } from '@/src/infrastructure/di/AppContainer';
 import { Button } from '@/src/shared/ui/Button';
 import { Card } from '@/src/shared/ui/Card';
@@ -35,6 +36,7 @@ export default function SettingsScreen() {
     loading: calendarPrefLoading,
     setCalendarSyncEnabled,
   } = useCalendarSyncPreference();
+  const liveActivity = useLiveActivityControls();
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-950" edges={['bottom']}>
@@ -93,6 +95,32 @@ export default function SettingsScreen() {
             <Button label="刷新小组件数据" onPress={() => container.refreshWidgets.execute()} />
           </View>
         </Card>
+
+        {Platform.OS === 'ios' ? (
+          <Card title="Live Activity" subtitle="灵动岛 / 锁屏实时倒计时（需 Development Build）">
+            <Text className="mt-3 text-sm leading-6 text-slate-500">
+              在纪念日详情页可开启 Live Activity，在灵动岛与锁屏实时查看倒计时。App 回到前台或纪念日更新时会自动刷新。
+            </Text>
+            <Text className="mt-3 text-sm text-slate-500">
+              当前状态：
+              {liveActivity.loading
+                ? '检查中...'
+                : liveActivity.activeAnniversaryId
+                  ? '已有纪念日正在显示'
+                  : '未开启'}
+            </Text>
+            {liveActivity.activeAnniversaryId ? (
+              <View className="mt-4">
+                <Button
+                  label="结束 Live Activity"
+                  variant="secondary"
+                  disabled={liveActivity.busy}
+                  onPress={() => liveActivity.end()}
+                />
+              </View>
+            ) : null}
+          </Card>
+        ) : null}
 
         <Card title="数据与同步" subtitle="V1 完全离线，所有数据存储在本地">
           <Text className="mt-3 text-sm text-slate-500">云端同步将在后续版本提供。</Text>

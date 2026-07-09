@@ -3,6 +3,7 @@ export interface UserPreferences {
   theme: 'system' | 'light' | 'dark';
   calendarSyncEnabled: boolean;
   defaultRemindersEnabled: boolean;
+  activeLiveActivityAnniversaryId?: string;
   updatedAt: string;
 }
 
