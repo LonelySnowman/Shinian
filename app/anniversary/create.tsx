@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 
 import { AnniversaryForm } from '@/src/features/anniversary/presentation/components/AnniversaryForm';
 import type { AnniversaryFormValues } from '@/src/features/anniversary';
+import { remindersFromFormValues } from '@/src/features/anniversary/presentation/schemas/reminderFormMapper';
 import { useAppContainer } from '@/src/infrastructure/di/AppContainer';
 
 export default function CreateAnniversaryScreen() {
@@ -13,6 +14,7 @@ export default function CreateAnniversaryScreen() {
       date: values.date,
       isLunar: values.isLunar,
       repeatRule: { type: values.repeatType },
+      reminders: remindersFromFormValues(values),
       categoryId: values.categoryId,
       icon: values.icon,
       color: values.color,

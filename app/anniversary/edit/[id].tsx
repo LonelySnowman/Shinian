@@ -4,6 +4,10 @@ import { ActivityIndicator, View } from 'react-native';
 import { AnniversaryForm } from '@/src/features/anniversary/presentation/components/AnniversaryForm';
 import type { AnniversaryFormValues } from '@/src/features/anniversary';
 import { useAnniversary } from '@/src/features/anniversary';
+import {
+  formValuesFromReminders,
+  remindersFromFormValues,
+} from '@/src/features/anniversary/presentation/schemas/reminderFormMapper';
 import { useAppContainer } from '@/src/infrastructure/di/AppContainer';
 
 export default function EditAnniversaryScreen() {
@@ -25,6 +29,7 @@ export default function EditAnniversaryScreen() {
       date: values.date,
       isLunar: values.isLunar,
       repeatRule: { type: values.repeatType },
+      reminders: remindersFromFormValues(values),
       categoryId: values.categoryId,
       icon: values.icon,
       color: values.color,
@@ -45,6 +50,7 @@ export default function EditAnniversaryScreen() {
         icon: item.icon,
         color: item.color,
         notes: item.notes ?? '',
+        ...formValuesFromReminders(item.reminders),
       }}
       onSubmit={handleSubmit}
     />

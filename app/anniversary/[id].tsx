@@ -89,6 +89,23 @@ export default function AnniversaryDetailScreen() {
         </Card>
       ) : null}
 
+      <Card title="提醒">
+        <Text className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          {item.reminders.some((reminder) => reminder.enabled)
+            ? item.reminders
+                .filter((reminder) => reminder.enabled)
+                .map((reminder) =>
+                  reminder.offsetDays === 0
+                    ? `当天 ${reminder.timeOfDay} 提醒`
+                    : reminder.offsetDays < 0
+                      ? `提前 ${Math.abs(reminder.offsetDays)} 天 ${reminder.timeOfDay} 提醒`
+                      : `${reminder.offsetDays} 天后 ${reminder.timeOfDay} 提醒`,
+                )
+                .join(' · ')
+            : '未开启提醒'}
+        </Text>
+      </Card>
+
       <View className="gap-3">
         <Button label="编辑" onPress={() => router.push(`/anniversary/edit/${item.id}`)} />
         <Button label="归档" variant="secondary" onPress={handleArchive} />

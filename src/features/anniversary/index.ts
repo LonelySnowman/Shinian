@@ -13,5 +13,6 @@ export {
   anniversaryFormSchema,
   ANNIVERSARY_COLORS,
   ANNIVERSARY_ICONS,
+  REMINDER_OFFSET_OPTIONS,
 } from './presentation/schemas/anniversaryFormSchema';
 export type { AnniversaryFormValues } from './presentation/schemas/anniversaryFormSchema';

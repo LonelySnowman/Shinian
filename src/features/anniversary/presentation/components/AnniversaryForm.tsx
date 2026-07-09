@@ -6,6 +6,7 @@ import { DEFAULT_CATEGORY_ID } from '@/src/core/domain/entities/Category';
 import {
   ANNIVERSARY_COLORS,
   anniversaryFormSchema,
+  REMINDER_OFFSET_OPTIONS,
   type AnniversaryFormValues,
 } from '@/src/features/anniversary/presentation/schemas/anniversaryFormSchema';
 import { useCategories } from '@/src/features/category';
@@ -28,6 +29,8 @@ const defaultFormValues: AnniversaryFormValues = {
   icon: 'heart',
   color: ANNIVERSARY_COLORS[0],
   notes: '',
+  reminderEnabled: true,
+  reminderOffsetDays: 0,
 };
 
 export function AnniversaryForm({ defaultValues, submitLabel, onSubmit }: AnniversaryFormProps) {
@@ -45,6 +48,8 @@ export function AnniversaryForm({ defaultValues, submitLabel, onSubmit }: Annive
 
   const selectedColor = watch('color');
   const selectedCategoryId = watch('categoryId');
+  const reminderEnabled = watch('reminderEnabled');
+  const reminderOffsetDays = watch('reminderOffsetDays');
 
   return (
     <ScrollView className="flex-1 bg-slate-50 dark:bg-slate-950" contentContainerClassName="p-4 pb-10">
@@ -103,6 +108,46 @@ export function AnniversaryForm({ defaultValues, submitLabel, onSubmit }: Annive
             )}
           />
         ))}
+      </View>
+
+      <View className="mt-5 rounded-2xl bg-white dark:bg-slate-900 px-4 py-3">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1 pr-4">
+            <Text className="text-sm font-medium text-slate-700 dark:text-slate-200">开启提醒</Text>
+            <Text className="mt-1 text-xs text-slate-400">将在纪念日到来时发送本地通知</Text>
+          </View>
+          <Controller
+            control={control}
+            name="reminderEnabled"
+            render={({ field: { onChange, value } }) => (
+              <Switch value={value} onValueChange={onChange} trackColor={{ true: '#6366F1' }} />
+            )}
+          />
+        </View>
+
+        {reminderEnabled ? (
+          <View className="mt-4 flex-row flex-wrap gap-2">
+            {REMINDER_OFFSET_OPTIONS.map((option) => (
+              <Pressable
+                key={option.value}
+                onPress={() => setValue('reminderOffsetDays', option.value)}
+                className={`rounded-full px-4 py-2 ${
+                  reminderOffsetDays === option.value
+                    ? 'bg-sena-primary'
+                    : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
+                }`}>
+                <Text
+                  className={
+                    reminderOffsetDays === option.value
+                      ? 'text-white'
+                      : 'text-slate-700 dark:text-slate-200'
+                  }>
+                  {option.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
       </View>
 
       <Text className="mb-2 mt-5 text-sm font-medium text-slate-600">分类</Text>
