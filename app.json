@@ -38,6 +38,13 @@
         }
       ],
       [
+        "expo-calendar",
+        {
+          "calendarPermission": "时念需要访问你的日历来同步纪念日。",
+          "remindersPermission": "时念需要访问你的提醒事项来同步纪念日。"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",

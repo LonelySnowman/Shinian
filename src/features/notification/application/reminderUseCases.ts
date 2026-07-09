@@ -58,12 +58,17 @@ export class CancelRemindersForAnniversaryUseCase {
   ) {}
 
   async execute(anniversaryId: string): Promise<void> {
-    const anniversary = await this.anniversaryRepository.findById(anniversaryId);
+    const anniversary = await this.anniversaryRepository.findRecordById(anniversaryId);
     if (!anniversary) {
       return;
     }
 
     await this.notificationPort.cancelMany(anniversary.notificationIds ?? []);
+
+    if (anniversary.deletedAt) {
+      return;
+    }
+
     await this.anniversaryRepository.save({
       ...anniversary,
       notificationIds: [],

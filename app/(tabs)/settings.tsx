@@ -1,7 +1,11 @@
 import { Link } from 'expo-router';
-import { Text, View } from 'react-native';
+import { Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  useCalendarPermission,
+  useCalendarSyncPreference,
+} from '@/src/features/calendar-sync';
 import { useNotificationPermission } from '@/src/features/notification';
 import { Button } from '@/src/shared/ui/Button';
 import { Card } from '@/src/shared/ui/Card';
@@ -19,6 +23,16 @@ function permissionLabel(status: string): string {
 
 export default function SettingsScreen() {
   const { status, loading, request } = useNotificationPermission();
+  const {
+    status: calendarStatus,
+    loading: calendarLoading,
+    request: requestCalendar,
+  } = useCalendarPermission();
+  const {
+    enabled: calendarSyncEnabled,
+    loading: calendarPrefLoading,
+    setCalendarSyncEnabled,
+  } = useCalendarSyncPreference();
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-950" edges={['bottom']}>
@@ -34,6 +48,37 @@ export default function SettingsScreen() {
           ) : (
             <Text className="mt-3 text-sm text-slate-500">
               纪念日创建或更新后，将自动调度未来 2 年的提醒。
+            </Text>
+          )}
+        </Card>
+
+        <Card title="日历同步" subtitle="同步到 Apple / Android 系统日历">
+          <View className="mt-4 flex-row items-center justify-between">
+            <View className="flex-1 pr-4">
+              <Text className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                启用日历同步
+              </Text>
+              <Text className="mt-1 text-xs text-slate-400">
+                开启后，可在创建纪念日时选择同步到系统日历
+              </Text>
+            </View>
+            <Switch
+              value={calendarSyncEnabled}
+              disabled={calendarPrefLoading}
+              onValueChange={(value) => setCalendarSyncEnabled(value)}
+              trackColor={{ true: '#6366F1' }}
+            />
+          </View>
+          <Text className="mt-3 text-sm text-slate-500">
+            日历权限：{calendarLoading ? '检查中...' : permissionLabel(calendarStatus)}
+          </Text>
+          {calendarStatus !== 'granted' ? (
+            <View className="mt-4">
+              <Button label="开启日历权限" onPress={() => requestCalendar()} />
+            </View>
+          ) : (
+            <Text className="mt-3 text-sm text-slate-500">
+              App 为数据源；若你在系统日历中删除了事件，下次启动会自动修复。
             </Text>
           )}
         </Card>

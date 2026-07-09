@@ -44,6 +44,7 @@ export type CreateAnniversaryInput = {
   icon?: string;
   color?: string;
   notes?: string;
+  calendarSyncEnabled?: boolean;
 };
 
 export type UpdateAnniversaryInput = Partial<
@@ -68,7 +69,7 @@ export function createAnniversaryEntity(
     color: input.color ?? '#6366F1',
     notes: input.notes?.trim() || undefined,
     archived: false,
-    calendarSync: { enabled: false },
+    calendarSync: { enabled: input.calendarSyncEnabled ?? false },
     notificationIds: [],
     createdAt: input.now,
     updatedAt: input.now,

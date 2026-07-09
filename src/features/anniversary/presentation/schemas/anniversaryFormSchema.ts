@@ -17,6 +17,7 @@ export const anniversaryFormSchema = z.object({
   notes: z.string().max(500, '备注最多 500 字').optional(),
   reminderEnabled: z.boolean(),
   reminderOffsetDays: z.number(),
+  calendarSyncEnabled: z.boolean(),
 });
 
 export type AnniversaryFormValues = z.infer<typeof anniversaryFormSchema>;

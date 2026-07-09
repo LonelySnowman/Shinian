@@ -15,6 +15,7 @@ export default function CreateAnniversaryScreen() {
       isLunar: values.isLunar,
       repeatRule: { type: values.repeatType },
       reminders: remindersFromFormValues(values),
+      calendarSyncEnabled: values.calendarSyncEnabled,
       categoryId: values.categoryId,
       icon: values.icon,
       color: values.color,

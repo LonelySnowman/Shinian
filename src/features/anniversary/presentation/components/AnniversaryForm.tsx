@@ -31,6 +31,7 @@ const defaultFormValues: AnniversaryFormValues = {
   notes: '',
   reminderEnabled: true,
   reminderOffsetDays: 0,
+  calendarSyncEnabled: false,
 };
 
 export function AnniversaryForm({ defaultValues, submitLabel, onSubmit }: AnniversaryFormProps) {
@@ -50,6 +51,7 @@ export function AnniversaryForm({ defaultValues, submitLabel, onSubmit }: Annive
   const selectedCategoryId = watch('categoryId');
   const reminderEnabled = watch('reminderEnabled');
   const reminderOffsetDays = watch('reminderOffsetDays');
+  const calendarSyncEnabled = watch('calendarSyncEnabled');
 
   return (
     <ScrollView className="flex-1 bg-slate-50 dark:bg-slate-950" contentContainerClassName="p-4 pb-10">
@@ -147,6 +149,31 @@ export function AnniversaryForm({ defaultValues, submitLabel, onSubmit }: Annive
               </Pressable>
             ))}
           </View>
+        ) : null}
+      </View>
+
+      <View className="mt-5 rounded-2xl bg-white dark:bg-slate-900 px-4 py-3">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1 pr-4">
+            <Text className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              同步到系统日历
+            </Text>
+            <Text className="mt-1 text-xs text-slate-400">
+              需先在设置中开启日历同步，并授予日历权限
+            </Text>
+          </View>
+          <Controller
+            control={control}
+            name="calendarSyncEnabled"
+            render={({ field: { onChange, value } }) => (
+              <Switch value={value} onValueChange={onChange} trackColor={{ true: '#6366F1' }} />
+            )}
+          />
+        </View>
+        {calendarSyncEnabled ? (
+          <Text className="mt-3 text-xs text-slate-500">
+            将创建/更新系统日历中的全天事件，并在重复规则下每年提醒。
+          </Text>
         ) : null}
       </View>
 

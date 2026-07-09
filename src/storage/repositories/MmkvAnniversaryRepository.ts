@@ -28,11 +28,15 @@ export class MmkvAnniversaryRepository implements AnniversaryRepository {
   }
 
   async findById(id: string): Promise<Anniversary | null> {
-    const record = readJson<Anniversary>(getDataStore(), STORAGE_KEYS.anniversaryRecord(id));
+    const record = await this.findRecordById(id);
     if (!record || record.deletedAt) {
       return null;
     }
     return record;
+  }
+
+  async findRecordById(id: string): Promise<Anniversary | null> {
+    return readJson<Anniversary>(getDataStore(), STORAGE_KEYS.anniversaryRecord(id));
   }
 
   async findAll(query: AnniversaryQuery = {}): Promise<Anniversary[]> {

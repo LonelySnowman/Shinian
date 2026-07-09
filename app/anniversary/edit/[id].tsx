@@ -30,6 +30,10 @@ export default function EditAnniversaryScreen() {
       isLunar: values.isLunar,
       repeatRule: { type: values.repeatType },
       reminders: remindersFromFormValues(values),
+      calendarSync: {
+        ...item.calendarSync,
+        enabled: values.calendarSyncEnabled,
+      },
       categoryId: values.categoryId,
       icon: values.icon,
       color: values.color,
@@ -51,6 +55,7 @@ export default function EditAnniversaryScreen() {
         color: item.color,
         notes: item.notes ?? '',
         ...formValuesFromReminders(item.reminders),
+        calendarSyncEnabled: item.calendarSync?.enabled ?? false,
       }}
       onSubmit={handleSubmit}
     />

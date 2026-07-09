@@ -15,6 +15,7 @@ export type AnniversaryChangeListener = () => void;
 
 export interface AnniversaryRepository {
   findById(id: string): Promise<Anniversary | null>;
+  findRecordById(id: string): Promise<Anniversary | null>;
   findAll(query?: AnniversaryQuery): Promise<Anniversary[]>;
   save(anniversary: Anniversary): Promise<void>;
   delete(id: string): Promise<void>;

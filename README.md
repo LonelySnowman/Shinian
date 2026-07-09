@@ -22,7 +22,7 @@ AI-ready 纪念日与生活事件助手。V1 为完全离线应用，无后端�
 - [x] Expo Router 导航（Tabs + 详情/创建/编辑/归档）
 - [x] 首页列表 + 创建/编辑/详情 UI
 - [x] 本地通知（ReminderPlanner + Expo Notifications）
-- [ ] 日历同步
+- [x] 日历同步（expo-calendar + EventKit / CalendarProvider）
 - [ ] Widget
 - [ ] Live Activity
 

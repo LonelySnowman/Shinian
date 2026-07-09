@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 import { EventBus } from '@/src/core/application/bus/EventBus';
 import type { AnniversaryRepository } from '@/src/core/domain/ports/AnniversaryRepository';
+import type { CalendarPort } from '@/src/core/domain/ports/CalendarPort';
 import type { CategoryRepository } from '@/src/core/domain/ports/CategoryRepository';
 import type { NotificationPort } from '@/src/core/domain/ports/NotificationPort';
 import type { PreferencesRepository } from '@/src/core/domain/ports/PreferencesRepository';
@@ -15,11 +16,19 @@ import {
   UpdateAnniversaryUseCase,
 } from '@/src/features/anniversary/application/useCases';
 import {
+  CalendarSyncService,
+  ReconcileCalendarEventsUseCase,
+  SyncAnniversaryToCalendarUseCase,
+  UnsyncAnniversaryFromCalendarUseCase,
+  UpdateCalendarSyncPreferenceUseCase,
+} from '@/src/features/calendar-sync';
+import {
   CancelRemindersForAnniversaryUseCase,
   NotificationSyncService,
   RescheduleAllRemindersUseCase,
   ScheduleRemindersForAnniversaryUseCase,
 } from '@/src/features/notification';
+import { createCalendarPort } from '@/src/native/calendar/createCalendarPort';
 import { createNotificationPort } from '@/src/native/notifications/createNotificationPort';
 import { LoadingScreen } from '@/src/shared/ui/LoadingScreen';
 import { initialMigration } from '@/src/storage/migrations/001_initial';
@@ -34,6 +43,7 @@ export interface AppContainer {
   categoryRepository: CategoryRepository;
   preferencesRepository: PreferencesRepository;
   notificationPort: NotificationPort;
+  calendarPort: CalendarPort;
   createAnniversary: CreateAnniversaryUseCase;
   updateAnniversary: UpdateAnniversaryUseCase;
   deleteAnniversary: DeleteAnniversaryUseCase;
@@ -45,6 +55,11 @@ export interface AppContainer {
   cancelReminders: CancelRemindersForAnniversaryUseCase;
   rescheduleAllReminders: RescheduleAllRemindersUseCase;
   notificationSyncService: NotificationSyncService;
+  syncAnniversaryToCalendar: SyncAnniversaryToCalendarUseCase;
+  unsyncAnniversaryFromCalendar: UnsyncAnniversaryFromCalendarUseCase;
+  reconcileCalendarEvents: ReconcileCalendarEventsUseCase;
+  updateCalendarSyncPreference: UpdateCalendarSyncPreferenceUseCase;
+  calendarSyncService: CalendarSyncService;
 }
 
 let containerSingleton: AppContainer | null = null;
@@ -59,6 +74,7 @@ export function createAppContainer(): AppContainer {
   const categoryRepository = new MmkvCategoryRepository();
   const preferencesRepository = new MmkvPreferencesRepository();
   const notificationPort = createNotificationPort();
+  const calendarPort = createCalendarPort();
 
   const scheduleReminders = new ScheduleRemindersForAnniversaryUseCase(
     anniversaryRepository,
@@ -80,12 +96,41 @@ export function createAppContainer(): AppContainer {
     cancelReminders,
   );
 
+  const syncAnniversaryToCalendar = new SyncAnniversaryToCalendarUseCase(
+    anniversaryRepository,
+    calendarPort,
+    preferencesRepository,
+  );
+  const unsyncAnniversaryFromCalendar = new UnsyncAnniversaryFromCalendarUseCase(
+    anniversaryRepository,
+    calendarPort,
+  );
+  const reconcileCalendarEvents = new ReconcileCalendarEventsUseCase(
+    anniversaryRepository,
+    syncAnniversaryToCalendar,
+    calendarPort,
+    preferencesRepository,
+  );
+  const updateCalendarSyncPreference = new UpdateCalendarSyncPreferenceUseCase(
+    preferencesRepository,
+    anniversaryRepository,
+    calendarPort,
+    syncAnniversaryToCalendar,
+    unsyncAnniversaryFromCalendar,
+  );
+  const calendarSyncService = new CalendarSyncService(
+    eventBus,
+    syncAnniversaryToCalendar,
+    unsyncAnniversaryFromCalendar,
+  );
+
   containerSingleton = {
     eventBus,
     anniversaryRepository,
     categoryRepository,
     preferencesRepository,
     notificationPort,
+    calendarPort,
     createAnniversary: new CreateAnniversaryUseCase(anniversaryRepository, eventBus),
     updateAnniversary: new UpdateAnniversaryUseCase(anniversaryRepository, eventBus),
     deleteAnniversary: new DeleteAnniversaryUseCase(anniversaryRepository, eventBus),
@@ -97,6 +142,11 @@ export function createAppContainer(): AppContainer {
     cancelReminders,
     rescheduleAllReminders,
     notificationSyncService,
+    syncAnniversaryToCalendar,
+    unsyncAnniversaryFromCalendar,
+    reconcileCalendarEvents,
+    updateCalendarSyncPreference,
+    calendarSyncService,
   };
 
   return containerSingleton;
@@ -119,8 +169,10 @@ export function AppContainerProvider({
     runMigrations([initialMigration])
       .then(() => container.categoryRepository.seedDefaults(new Date().toISOString()))
       .then(() => container.rescheduleAllReminders.execute())
+      .then(() => container.reconcileCalendarEvents.execute())
       .then(() => {
         container.notificationSyncService.start();
+        container.calendarSyncService.start();
         if (mounted) {
           setReady(true);
         }
@@ -129,6 +181,7 @@ export function AppContainerProvider({
     return () => {
       mounted = false;
       container.notificationSyncService.stop();
+      container.calendarSyncService.stop();
     };
   }, [container]);
 

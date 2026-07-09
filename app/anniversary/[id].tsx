@@ -106,6 +106,16 @@ export default function AnniversaryDetailScreen() {
         </Text>
       </Card>
 
+      <Card title="日历同步">
+        <Text className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          {item.calendarSync?.enabled
+            ? item.calendarSync.externalEventId
+              ? `已同步到系统日历${item.calendarSync.lastSyncedAt ? ` · 最近同步 ${new Date(item.calendarSync.lastSyncedAt).toLocaleString('zh-CN')}` : ''}`
+              : '等待同步（请检查设置中的日历权限）'
+            : '未开启日历同步'}
+        </Text>
+      </Card>
+
       <View className="gap-3">
         <Button label="编辑" onPress={() => router.push(`/anniversary/edit/${item.id}`)} />
         <Button label="归档" variant="secondary" onPress={handleArchive} />
